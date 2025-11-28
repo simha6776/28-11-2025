@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Route Optimizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1976d2;
+      color: white;
+      padding: 15px 30px;
+    }
+    .container {
+      padding: 20px 40px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    pre {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      width: 100%;
+      height: 400px;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+      background: #e3f2fd;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Route Optimization Dashboard</h1>
+  </header>
+
+ <!--<div class="container">
+    //<div class="card">
+      //<h2>Enter Points</h2>
+      //<p>Format: one coordinate per line as <code>x,y</code> (e.g., 10,20)</p>
+      //<textarea id="points" rows="6" style="width:100%;"></textarea><br>
+      //<button id="optBtn">Optimize Route</button>
+     // <pre id="out"></pre>
+     // <canvas id="canvas"></canvas>
+    //</div>
+  //</div>
+  <form id="routeForm">
+  <textarea id="locations" rows="5" cols="40"
+    placeholder="Enter locations separated by commas (e.g. Bengaluru, Chennai, Hyderabad)"></textarea>
+  <button>Optimize</button>
+</form>
+<pre id="result"></pre>-->
+
+
+  
+ <!--// ✅ Optimize route on button click
+ //document.getElementById('optBtn').onclick = async () => {
+   // const lines = document.getElementById('points').value.trim().split('\n');
+   // const coords = lines.map(l => {
+    //  const [x, y] = l.split(',').map(Number);
+    ///  return [x, y];
+   // });
+    //const res = await fetch('/optimize_route', {
+     // method: 'POST',
+    //  headers: {'Content-Type': 'application/json'},
+    //  body: JSON.stringify({points: coords})
+   // });
+   // const data = await res.json();
+   // document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+  //  drawRoute(coords, data.tour);
+ // };
+
+  // ✅ Draw route on canvas
+  //function drawRoute(points, tour) {
+  //  const canvas = document.getElementById('canvas');
+    //const ctx = canvas.getContext('2d');
+   // ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Scale to fit canvas
+   // const xs = points.map(p => p[0]);
+    //const ys = points.map(p => p[1]);
+   // const minX = Math.min(...xs), maxX = Math.max(...xs);
+   // const minY = Math.min(...ys), maxY = Math.max(...ys);
+   // const scaleX = canvas.width / (maxX - minX + 10);
+   // const scaleY = canvas.height / (maxY - minY + 10);
+
+   // ctx.beginPath();
+   // ctx.moveTo((points[tour[0]][0] - minX) * scaleX, (points[tour[0]][1] - minY) * scaleY);
+   // for (let i = 1; i < tour.length; i++) {
+    //  const [x, y] = points[tour[i]];
+    //  ctx.lineTo((x - minX) * scaleX, (y - minY) * scaleY);
+   // }
+   // ctx.closePath();
+   // ctx.strokeStyle = "#1976d2";
+   // ctx.lineWidth = 2;
+   // ctx.stroke();
+
+    // Draw points
+   // ctx.fillStyle = "red";
+   // for (let i = 0; i < points.length; i++) {
+     // const [x, y] = points[i];
+     // ctx.beginPath();
+     // ctx.arc((x - minX) * scaleX, (y - minY) * scaleY, 5, 0, Math.PI * 2);
+     // ctx.fill();
+   // }
+  //}-->
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Route Optimizer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    #map { height: 500px; width: 100%; margin-top: 15px; border-radius: 10px; }
+    button { padding: 8px 14px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    input { padding: 6px; width: 250px; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <h2>🧭 Route Optimization</h2>
+  <p>Enter location names (at least 2) to find the shortest delivery path.</p>
+  
+  <div id="locations">
+    <input type="text" placeholder="Enter location (e.g., Bengaluru)" />
+    <input type="text" placeholder="Enter location (e.g., Mumbai)" />
+  </div>
+  <br>
+  <button onclick="addInput()">➕ Add Location</button>
+  <button onclick="optimizeRoute()">🚀 Optimize Route</button>
+
+  <h3 id="result"></h3>
+  <div id="map"></div>
+
+  <script>
+    let map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+    }).addTo(map);
+
+    function addInput() {
+      const div = document.getElementById('locations');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Enter another location';
+      div.appendChild(document.createElement('br'));
+      div.appendChild(input);
+    }
+
+    async function optimizeRoute() {
+      const inputs = document.querySelectorAll('#locations input');
+      const locations = Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+      if (locations.length < 2) {
+        alert("Please enter at least two locations.");
+        return;
+      }
+
+      const res = await fetch('/optimize_route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations })
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      // Display results
+      document.getElementById('result').innerHTML = 
+        `<b>Total Distance:</b> ${data.total_distance_km} km<br><b>Optimized Order:</b> ${data.optimized_order.map(p => p.name).join(' → ')}`;
+
+      // Clear existing map layers
+      map.eachLayer(layer => { if (layer instanceof L.Marker || layer instanceof L.Polyline) map.removeLayer(layer); });
+
+      // Plot route
+      const latlngs = data.optimized_order.map(p => [p.lat, p.lon]);
+      latlngs.forEach((p, i) => {
+        L.marker(p).addTo(map).bindPopup(`${i+1}. ${data.optimized_order[i].name}`).openPopup();
+      });
+      L.polyline(latlngs, { color: 'blue' }).addTo(map);
+      map.fitBounds(latlngs);
+    }
+  </script>
+</body>
+</html>
+

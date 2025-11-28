@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+     <meta charset="utf-8">
+  <title>Supply Chain Tracking</title>
+  <link rel="stylesheet" href="/static/style.css">
+    <title>Inventory Management</title>
+    <style>
+      body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1e88e5;
+      color: white;
+      padding: 15px 30px;
+    }
+    .container {
+      padding: 20px 40px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #1e88e5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #f1f1f1;
+    }
+    pre {
+      background: #f6f8fa;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+      background: #e3f2fd;
+      color: #555;
+    }
+    </style>
+</head>
+<body>
+<header>
+<h2>Inventory Management System</h2>
+</header>
+<button onclick="loadInventory()">Refresh Inventory</button>
+<button onclick="resetInventory()">Reset Inventory</button>
+
+<div class="card">
+
+<h3>Add Item</h3>
+<input id="name" placeholder="Name">
+<input id="qty" type="number" placeholder="Quantity">
+<input id="price" type="number" placeholder="Price">
+<input id="category" placeholder="Category">
+<button onclick="addItem()">Add</button>
+</div>
+
+<div class="card">
+
+<h3>Search</h3>
+<input id="searchKey" oninput="searchItem()" placeholder="Search item...">
+</div>
+
+<div class="card">
+
+<h3>Low Stock Alerts</h3>
+<button onclick="loadAlerts()">Show Alerts</button>
+<p id="alerts"></p>
+</div>
+
+<div class="card">
+<h3>Inventory</h3>
+<table id="invTable"></table>
+</div>
+<script>
+function addItem() {
+    fetch("/add", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            name: document.getElementById("name").value,
+            quantity: document.getElementById("qty").value,
+            price: document.getElementById("price").value,
+            category: document.getElementById("category").value
+        })
+    })
+    .then(r => r.json())
+    .then(() => loadInventory());
+}
+
+function loadInventory() {
+    fetch("/inventory")
+    .then(r => r.json())
+    .then(data => {
+        let html = "<tr><th>ID</th><th>Name</th><th>Qty</th><th>Price</th><th>Category</th></tr>";
+        data.forEach(row => {
+            html += `<tr>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2]}</td>
+                        <td>${row[3]}</td>
+                        <td>${row[4]}</td>
+                    </tr>`;
+        });
+        document.getElementById("invTable").innerHTML = html;
+    });
+}
+
+function resetInventory() {
+    fetch("/reset", { method: "POST" }).then(loadInventory);
+}
+
+function searchItem() {
+    fetch("/search?q=" + document.getElementById("searchKey").value)
+    .then(r => r.json())
+    .then(data => {
+        let html = "<tr><th>ID</th><th>Name</th><th>Qty</th><th>Price</th><th>Category</th></tr>";
+        data.forEach(row => {
+            html += `<tr>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2]}</td>
+                        <td>${row[3]}</td>
+                        <td>${row[4]}</td>
+                    </tr>`;
+        });
+        document.getElementById("invTable").innerHTML = html;
+    });
+}
+
+function loadAlerts() {
+    fetch("/alerts")
+    .then(r => r.json())
+    .then(data => {
+        let output = "";
+        data.forEach(i => {
+            output += `${i[1]} (Qty: ${i[2]})<br>`;
+        });
+        document.getElementById("alerts").innerHTML = output || "No low stock items.";
+    });
+}
+
+loadInventory();
+</script>
+
+</body>
+</html>
